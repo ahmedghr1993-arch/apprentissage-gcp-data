@@ -1,0 +1,82 @@
+-- =====================================================================
+-- Session 01 — Bases : SELECT, WHERE, GROUP BY, ORDER BY, LIMIT
+-- Source : dataset public bigquery-public-data.usa_names
+-- =====================================================================
+
+
+-- ---------------------------------------------------------------------
+-- 1. Top 10 des prénoms masculins depuis 1910
+-- Volume traité : ~113 Mo
+-- ---------------------------------------------------------------------
+SELECT name, SUM(number) AS total
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'M'
+GROUP BY name
+ORDER BY total DESC
+LIMIT 10;
+
+
+-- ---------------------------------------------------------------------
+-- 2. Même requête pour les prénoms féminins
+-- Seule modification : la valeur du filtre gender
+-- ---------------------------------------------------------------------
+SELECT name, SUM(number) AS total
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'F'
+GROUP BY name
+ORDER BY total DESC
+LIMIT 10;
+
+
+-- ---------------------------------------------------------------------
+-- 3. Top 5 des prénoms masculins pour la seule année 2000
+-- Nouveauté : deux conditions combinées avec AND
+-- ---------------------------------------------------------------------
+SELECT name, SUM(number) AS Total
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'M' AND year = 2000
+GROUP BY name
+ORDER BY Total DESC
+LIMIT 5;
+
+
+-- ---------------------------------------------------------------------
+-- 4. Les trois formes de COUNT
+-- COUNT(*)            : toutes les lignes
+-- COUNT(colonne)      : les lignes où la colonne n'est pas NULL
+-- COUNT(DISTINCT col) : les valeurs différentes
+-- ---------------------------------------------------------------------
+SELECT
+  COUNT(*)               AS nb_lignes,
+  COUNT(DISTINCT name)   AS nb_prenoms_distincts,
+  COUNT(DISTINCT year)   AS nb_annees
+FROM `bigquery-public-data.usa_names.usa_1910_current`;
+
+
+-- ---------------------------------------------------------------------
+-- 5. Prénoms féminins donnés plus d'un million de fois
+-- Nouveauté : HAVING, qui filtre APRÈS le regroupement
+-- WHERE filtre les lignes avant, HAVING filtre les groupes après.
+-- Impossible d'écrire WHERE SUM(number) > 1000000 : à ce stade
+-- le total n'est pas encore calculé.
+-- Résultat : 11 prénoms
+-- ---------------------------------------------------------------------
+SELECT name, SUM(number) AS total
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'F'
+GROUP BY name
+HAVING SUM(number) > 1000000
+ORDER BY total DESC;
+
+
+-- ---------------------------------------------------------------------
+-- 6. Prénoms (tous genres) donnés plus de 15 000 fois en 2020
+-- WHERE sur l'année (filtre de ligne), HAVING sur le total (filtre de groupe)
+-- Résultat : 4 prénoms — Liam 19 777, Noah 18 630, Olivia 17 641, Emma 15 661
+-- ---------------------------------------------------------------------
+SELECT name, SUM(number) AS total
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE year = 2020
+GROUP BY name
+HAVING SUM(number) > 15000
+ORDER BY total DESC;
